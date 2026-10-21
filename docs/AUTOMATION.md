@@ -1,5 +1,9 @@
 # Automatic OpenCode capture and AI-generated retrieval summaries
 
+New users: start with the **[user manual](USER_MANUAL.md)** for installation,
+MCP connections in your coding projects, imports, and a complete capture test.
+This page provides the detailed automation reference and upgrade procedures.
+
 Version 0.2 adds an opt-in pipeline. It is disabled until each user configures it.
 It runs on that person's Windows PC, using her existing OpenCode login.
 

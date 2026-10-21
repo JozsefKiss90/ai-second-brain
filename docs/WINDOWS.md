@@ -1,5 +1,9 @@
 # Windows setup and everyday use
 
+For the complete newcomer walkthrough, including MCP in other projects, daily
+prompts, imports, automatic capture and acceptance checks, start with the
+**[user manual](USER_MANUAL.md)**. This page is the shorter installation reference.
+
 ## 1. Check prerequisites
 
 Open PowerShell (or VS Code's PowerShell terminal):
@@ -69,7 +73,8 @@ For hard tasks, connect OpenAI through `/connect`. Use ChatGPT Plus/Pro login if
 supported for your account, or a separately billed API key. Use your own account.
 Switch models manually with `/models` and return to the free model afterward.
 The application's free_model/hard_model profile fields do not switch models.
-No OpenAI or other inference API is called by the Python application.
+Ordinary local indexing/search makes no inference calls. If you enable optional
+enrichment, the Python application invokes OpenCode with the configured model.
 
 Official provider guidance: https://opencode.ai/docs/providers/
 Current free-model terms: https://opencode.ai/v2/docs/console/models/
@@ -77,12 +82,19 @@ Current free-model terms: https://opencode.ai/v2/docs/console/models/
 ## 5. Add notes and ask questions
 
 Save UTF-8 .md/.txt files into your private inbox; run `brain sync`. Use selected
-explicit conversation exports as text; this starter does not scrape histories.
+explicit conversation exports as text, or enable opt-in OpenCode capture using
+the [manual](USER_MANUAL.md#5-enable-conversation-capture-and-summaries).
 Read evidence through OpenCode's brain MCP tools. `opencode mcp list` checks server
 connection. If the MCP server fails, verify the generated executable path and run
 `brain status` directly first. MCP uses stdio and does not open a network port.
 
 ## 6. Schedule local imports
+
+For capture → imports → optional AI enrichment, use the supplied task installer
+after completing the [manual acceptance exercise](USER_MANUAL.md#6-prove-capture-works-then-schedule-it).
+The following alternative schedules **only imports of inbox files**; it neither
+captures conversations nor generates summaries. Choose the pipeline task for
+normal automatic capture rather than registering both schedules.
 
 Task Scheduler → Create Task, using your own user account:
 

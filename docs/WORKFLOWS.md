@@ -1,5 +1,8 @@
 # Customize coding and automation workflows
 
+For the full daily routine, project connection, saved handoffs and ready-to-use
+retrieval prompts, see the **[user manual](USER_MANUAL.md#7-use-it-throughout-your-working-day)**.
+
 Each user edits her own profile.json in the private workspace printed by `brain init`.
 Keep it out of Git. This is workflow personalization, not model training.
 

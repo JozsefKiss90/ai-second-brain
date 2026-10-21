@@ -42,6 +42,11 @@ invitation, supply her exact username and desired permission.
 
 ## Colleague's first session
 
+Follow the **[user manual](USER_MANUAL.md)** end to end, including connecting the
+brain inside her actual coding projects and configuring her own capture scope.
+The checklist below summarizes the initial installation; cloning alone does not
+enable project capture or scheduled refresh.
+
 1. Open the repository URL above. A public clone does not need an invitation.
 2. Install/check the prerequisites in WINDOWS.md.
 3. Clone `https://github.com/JozsefKiss90/ai-second-brain.git` into her own Projects folder.

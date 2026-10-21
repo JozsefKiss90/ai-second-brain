@@ -4,6 +4,23 @@ A personal coding and automation memory for **Windows + OpenCode**, using a free
 model for everyday work and an explicitly selected OpenAI model for harder tasks.
 Each person uses the same application code with her own local data and preferences.
 
+## Start here: the user manual
+
+**[Read the Windows user manual](docs/USER_MANUAL.md)** for a complete path from
+installation to everyday use in your actual coding projects. It covers:
+
+- Creating your own instance and verifying a first source-cited MCP answer.
+- Connecting MCP in another project and preserving that project's agent rules.
+- Importing notes, handoffs and existing text, with project tags and revision history.
+- Enabling exact-directory conversation capture, AI summaries and scheduled refresh.
+- Daily prompts, expected results, troubleshooting, updates and backups.
+
+**MCP connection, capture scope and scheduled refresh are separate settings.**
+Setup configures MCP inside this checkout; it does not automatically connect or
+capture all your other projects. Follow the manual's
+[project setup](docs/USER_MANUAL.md#4-connect-an-actual-coding-project) for each
+working directory. Each colleague creates her own private memory and model login.
+
 ## What works in this starter
 
 - Import UTF-8 Markdown/text notes from a private inbox; skip unchanged content.
