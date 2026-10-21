@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+!.env.example
+opencode.json
+opencode.jsonc
+local/
+inbox/
+data/
+logs/
+backups/
+*.sqlite3*
+*.local.json
