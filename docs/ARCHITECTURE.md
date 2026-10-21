@@ -27,8 +27,9 @@ unit tests alone are not an end-to-end cloud-model test.
 ## Next implementation stages
 
 1. Validate native Windows installation and live OpenCode/MCP calls on the target PC.
-2. Add quote-validated summaries, bilingual retrieval questions and exact atoms.
-   Cache by content/schema/model/prompt version; keep raw search on model failure.
+2. Implemented in v0.2: opt-in OpenCode capture plus quote-validated summaries,
+   retrieval questions and exact atoms. See AUTOMATION.md. Raw search survives
+   enrichment failure. Native Windows scheduling/live inference need target-PC checks.
 3. Add explicit opt-in connectors: conversation exports, Git history, PDFs/Word,
    then read-only email. Each needs its own provenance/cursor/error tests.
 4. Add reviewable retention/purge and supersession management.
@@ -38,3 +39,7 @@ unit tests alone are not an end-to-end cloud-model test.
 
 No automatic paid fallback, autonomous source deletion, email sending, account
 sharing, or invisible chat-history capture is implemented.
+
+Automation adds an idempotent summary_jobs table; original chunks/record IDs
+remain unchanged. Generated index chunks are marked by negative internal chunk
+IDs, then mapped to original line ranges and labelled in tool responses.

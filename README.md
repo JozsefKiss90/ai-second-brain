@@ -12,15 +12,18 @@ Each person uses the same application code with her own local data and preferenc
 - Read evidence through a read-only local MCP server in OpenCode.
 - Personalize recurring tasks, language, tools and answer style in a private profile.
 - Back up the SQLite database consistently through its backup API.
-- Run imports from Windows Task Scheduler.
+- Optionally capture selected OpenCode conversations and enrich them with AI summaries.
+- Run the capture/index/enrichment pipeline from Windows Task Scheduler.
 
-No model calls occur during indexing/search. Model selection and generation run
+No model calls occur during ordinary indexing/search. Optional enrichment calls
+the explicitly configured model through OpenCode. Model selection and generation run
 in OpenCode. Free hosting has provider quotas and changing terms; OpenAI use
 requires your own supported account/login or separately billed API access.
 
-**This is an MVP, not the entire video system.** Automatic AI enrichment,
-mailbox/Git/chat connectors, PDF/Word parsing, a GUI and automatic fact-conflict
-resolution are future stages. Source authority/status are returned as evidence;
+**Version 0.2 adds opt-in OpenCode conversation capture and AI enrichment.**
+Follow [automation setup](docs/AUTOMATION.md) to enable them locally.
+Mailbox/Git/other-chat connectors, PDF/Word parsing, a GUI and automatic fact-conflict
+resolution remain future stages. Source authority/status are returned as evidence;
 they are not proof that a retrieved claim is true. AGENTS.md asks the assistant
 to retrieve first, but does not enforce retrieval on every response.
 
@@ -83,6 +86,9 @@ her own models. No shared API key or central server is required.
 & .\.venv\Scripts\brain.exe sync
 & .\.venv\Scripts\brain.exe status
 & .\.venv\Scripts\brain.exe profile
+& .\.venv\Scripts\brain.exe capture
+& .\.venv\Scripts\brain.exe enrich
+& .\.venv\Scripts\brain.exe auto
 & .\.venv\Scripts\brain.exe search 'Python environment' --project demo
 & .\.venv\Scripts\brain.exe search 'old error' --history
 & .\.venv\Scripts\brain.exe read 1 --start-line 1 --end-line 80

@@ -69,6 +69,8 @@ class Brain:
             CREATE TABLE IF NOT EXISTS runs(
               id INTEGER PRIMARY KEY, finished_at TEXT, imported INTEGER, errors TEXT);
             ''')
+            from .automation import initialize
+            initialize(self, c)
         return {'home': str(self.home), 'profile': str(profile)}
 
     @contextmanager
@@ -179,6 +181,17 @@ class Brain:
         result = []
         for rank, row in enumerate(rows, 1):
             item = dict(row)
+            item['evidence_kind'] = 'original_source'
+            if item['start_line'] < 0:
+                with self.connect(readonly=True) as c:
+                    job = c.execute('SELECT * FROM summary_jobs WHERE id=? AND status=\'complete\'',
+                                    (-item['start_line'],)).fetchone()
+                if job is None:
+                    continue
+                item['start_line'], item['end_line'] = job['start_line'], job['end_line']
+                item['evidence_kind'] = 'generated_retrieval_metadata'
+                item['generated_by'] = job['model']
+                item['citation_instruction'] = 'Read original source lines before citing claims; this excerpt is generated.'
             meta = json.loads(item.pop('meta'))
             stamp = meta.get('source_date')
             boost = 1.0
@@ -220,6 +233,13 @@ class Brain:
             budget -= original_len
         out['truncated'] = len(bounded) < len(out['lines']) or any(len(x) > 4000 for x in body.splitlines()[start_line-1:end_line]) or budget < 0
         out['lines'] = bounded
+        with self.connect(readonly=True) as c:
+            if c.execute("SELECT 1 FROM sqlite_master WHERE name='summary_jobs'").fetchone():
+                jobs = c.execute('''SELECT start_line,end_line,model,prompt_version,payload FROM summary_jobs
+                  WHERE revision=? AND status='complete' AND start_line<=? AND end_line>=?
+                  ORDER BY start_line LIMIT 5''', (record_id, end_line, start_line)).fetchall()
+                out['generated_metadata'] = [{**dict(job), 'payload': json.loads(job['payload']),
+                    'warning': 'Generated retrieval aid; original evidence is in lines.'} for job in jobs]
         return out
 
     def status(self):
@@ -227,7 +247,14 @@ class Brain:
             count = c.execute('SELECT count(*) FROM revisions WHERE current=1').fetchone()[0]
             revisions = c.execute('SELECT count(*) FROM revisions').fetchone()[0]
             last = c.execute('SELECT * FROM runs ORDER BY id DESC LIMIT 1').fetchone()
-        return {'documents': count, 'revisions': revisions, 'last_run': dict(last) if last else None}
+            summary_counts = {}
+            if c.execute("SELECT 1 FROM sqlite_master WHERE name='summary_jobs'").fetchone():
+                summary_counts = {r['status']: r['n'] for r in c.execute('''SELECT s.status,count(*) AS n
+                  FROM summary_jobs s JOIN revisions r ON r.id=s.revision WHERE r.current=1 GROUP BY s.status''')}
+        report = self.home / 'automation-last-run.json'
+        return {'documents': count, 'revisions': revisions, 'last_run': dict(last) if last else None,
+                'summary_jobs_current_revisions': summary_counts,
+                'last_automation_run': json.loads(report.read_text(encoding='utf-8')) if report.exists() else None}
 
     def backup(self, destination):
         dest = Path(destination).expanduser().resolve()

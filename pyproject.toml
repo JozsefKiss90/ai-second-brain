@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "workflow-second-brain"
-version = "0.1.0"
+version = "0.2.0"
 description = "Personal coding workflow memory for Windows and OpenCode"
 requires-python = ">=3.12"
 dependencies = []

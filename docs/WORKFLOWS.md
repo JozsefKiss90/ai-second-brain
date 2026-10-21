@@ -72,3 +72,6 @@ Both people may clone the same repository and `git pull` code updates. Each has
 an independent workspace on her own PC, own profile, model accounts and index.
 Code changes can be reviewed through branches and pull requests. A repository
 clone does not synchronize the two people's memories or provide shared chat.
+
+Optional: [automatic OpenCode capture and generated retrieval summaries](AUTOMATION.md)
+can replace some manual note capture. This is configured independently per user.

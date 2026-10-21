@@ -11,6 +11,11 @@ def main():
     s = p.add_subparsers(dest='command', required=True)
     for name in ('init', 'sync', 'status', 'profile', 'mcp'):
         s.add_parser(name)
+    for name in ('capture', 'auto'):
+        s.add_parser(name)
+    e = s.add_parser('enrich')
+    e.add_argument('--allow-paid', action='store_true', help='Explicitly permit the configured non-free model for this manual run only')
+    e.add_argument('--retry-failed', action='store_true', help='Retry failed jobs now, still respecting the per-run job budget')
     q = s.add_parser('search')
     q.add_argument('query')
     q.add_argument('--limit', type=int, default=8)
@@ -33,6 +38,10 @@ def main():
             out = brain.init()
         elif a.command == 'sync':
             out = brain.ingest()
+        elif a.command in ('capture', 'enrich', 'auto'):
+            from .automation import run
+            out = run(brain, a.command, getattr(a, 'allow_paid', False),
+                      retry_failed=getattr(a, 'retry_failed', False))
         elif a.command == 'search':
             out = brain.search(a.query, a.limit, a.project, a.history)
         elif a.command == 'read':

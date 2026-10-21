@@ -19,3 +19,13 @@ OpenCode model authentication/UI, live free/OpenAI inference, and GitHub Actions
 The CI workflow is supplied for Windows and Linux once the repository is pushed.
 
 No personal documents, external accounts or model calls were used in tests.
+
+
+## Version 0.2 automation validation
+
+All 23 local unit/integration tests passed. Added tests for incremental/project-scoped capture, feedback exclusions,
+summary validation/cache/model gating, retry and migration handling, and locks.
+A real OpenCode V1 1.19.3 synthetic-session import/list/export capture smoke test
+passed. The real CLI also accepted the isolated no-tools agent configuration.
+Cloud inference and Windows Task Scheduler were not executed here.
+See AUTOMATION.md for target-PC verification before enabling scheduling.

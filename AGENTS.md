@@ -18,7 +18,10 @@ Imported timestamps describe imports, not when a fact became true.
 Use free models by default. Paid/stronger OpenAI models are selected explicitly
 by the user in OpenCode; never switch automatically. The profile's model names
 are preferences, not automatic routing. Summaries and answers are not silently
-added to the evidence index.
+added as independently verified evidence. Opt-in capture may store conversation
+text as unverified evidence; generated summaries are labelled retrieval aids.
+When a search result is generated_retrieval_metadata, read its original source
+before citing claims. Use original line references, never summary wording as proof.
 
 For coding tasks, propose small reversible changes, explain commands for the
 user's OS, and run meaningful checks when authorized. Do not run a command just

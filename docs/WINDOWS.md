@@ -103,10 +103,12 @@ runs may wait then fail rather than run simultaneously.
 
 Before updating code, create a backup to a new filename using `brain backup`.
 Then `git pull --ff-only` and rerun setup. The private workspace is outside Git.
-The current release has no DB migrations; read future release notes before a
-schema-changing update. Back up private notes/profile separately as well.
+Version 0.2 adds automation tables through `brain init`; follow AUTOMATION.md
+for backup and migration steps before enabling capture/enrichment. Back up private notes/profile separately as well.
 
 Common issues: reopen terminal for PATH changes; use command shims when script
 execution is blocked; check JSON sidecar syntax and timezone-aware dates; check
 MCP logs if tools are not discovered. Search is lexical: try translated terms or
 add bilingual keywords in notes when a paraphrase does not match.
+
+For optional automatic capture and AI summaries, follow [AUTOMATION.md](AUTOMATION.md).
