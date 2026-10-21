@@ -3,6 +3,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from contextlib import closing
 from second_brain.core import Brain
 
 
@@ -73,7 +74,9 @@ class BrainTests(unittest.TestCase):
         self.brain.ingest()
         backup = self.home / 'snapshot.sqlite3'
         self.brain.backup(backup)
-        with sqlite3.connect(backup) as c:
+        # SQLite's transaction context does not close the connection.
+        # Explicitly close it before TemporaryDirectory cleanup on Windows.
+        with closing(sqlite3.connect(backup)) as c:
             self.assertEqual(c.execute('PRAGMA integrity_check').fetchone()[0], 'ok')
             self.assertEqual(c.execute("SELECT count(*) FROM chunks WHERE chunks MATCH 'npm'").fetchone()[0], 1)
         with self.assertRaises(ValueError):
