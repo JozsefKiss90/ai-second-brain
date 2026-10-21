@@ -54,7 +54,7 @@ opencode run --help
 
 The capture interface was exercised with OpenCode V1 1.19.3 and a synthetic
 session. The implementation requires `--pure`, JSON session listing, export,
-and `run --model --agent --format json --file --title`. Older versions may need
+and `run --model --agent --format json --dir --title`. Older versions may need
 an intentional update using the official V1 installation route. Do not mix V1
 and V2 commands. If opencode.ps1 is blocked, use opencode.cmd in these manual
 commands; Python resolves the command shim through PATH.
@@ -176,8 +176,9 @@ text is sent while enrichment is disabled. Test on non-sensitive material first.
 An ID's `-free` suffix is an execution allowlist, not a contractual guarantee of
 future pricing: verify current provider terms before enabling scheduled use.
 
-The worker invokes OpenCode with a fresh no-tools `brain_enricher` agent in a
-separate directory. It explicitly sets both the main and auxiliary small-model
+The worker invokes OpenCode with a fresh read-only `brain_enricher` agent in a
+disposable local Git worktree. Only that worktree's `source.txt` is readable;
+shell, edit, web, delegation and unrelated file reads remain denied. It explicitly sets both the main and auxiliary small-model
 settings to the selected model. External plugins are disabled with --pure.
 It does not continue your interactive chat, load the project's brain MCP config,
 read your auth file itself, or silently switch to a different model.
@@ -279,7 +280,7 @@ Removing the task does not delete your notes, original sessions or summary cache
 - Full original imported text is retained; this feature does not implement a
   privacy purge. Existing history/backups need separate retention handling.
 - Global OpenCode provider settings are retained so existing authentication can
-  work. The isolated worker is not an OS sandbox; it denies agent tools.
+  work. The isolated worker is not an OS sandbox; it permits only its approved source read.
 - Summary JSON/schema/quotes are checked locally. This cannot prove the accuracy
   of every generated sentence; original-source verification remains necessary.
 
@@ -290,8 +291,8 @@ exclusion, model gating, quote validation, enrichment caching, bounded job count
 retry cooldown, additive migration, locks, and the existing storage/MCP features.
 A synthetic session was imported into an isolated real OpenCode 1.19.3 installation;
 session-list/export capture, indexing, search and unchanged-session skipping worked.
-No live cloud summary inference or native Windows scheduled-task execution was
-performed in the authoring environment. Verify those with the manual steps above.
+Native Windows scheduled-task execution was not performed in the authoring
+environment. Verify scheduling with the manual steps above.
 
 Official interfaces:
 - https://opencode.ai/docs/cli/
@@ -326,3 +327,19 @@ the next check is worker configuration, rather than reinstalling Python or
 assuming your free account is exhausted. Restart OpenCode after code updates.
 Use brain_read explicitly to inspect generated_metadata; summaries are attached
 to source records and are not independent records with separate IDs.
+
+
+### Fix for a successful ordinary CLI call but a rejected no-tools worker
+
+Controlled tests on OpenCode 1.19.3 found that the ordinary CLI and --pure CLI
+both succeeded, while an agent with all tools disabled received a free-tier 403.
+This does not establish a general provider policy; it is the observed compatibility
+failure. The worker now uses a normal read-only agent, with access only to its
+single temporary numbered-source file. No headers, credentials or client identity
+are spoofed. It does not switch providers or models to get around a rejection.
+
+Git establishes a disposable worktree so OpenCode's relative read permissions
+have a precise scope. The worker sets an explicit --dir and disables snapshots.
+It accepts only successful read events for that exact file; other tool events
+or paths cause enrichment to fail. Existing quote/schema/cache validation remains.
+After pulling this fix, retry with `brain enrich --retry-failed`.

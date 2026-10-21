@@ -186,18 +186,38 @@ class AutomationTests(unittest.TestCase):
         self.assertNotIn('SECRET', reason)
         self.assertIn('option unsupported', safe_failure('', 'Unknown argument: pure', 1))
 
-    def test_worker_denies_tools_and_uses_only_explicit_model(self):
+    def test_worker_allows_only_approved_source_reads_and_explicit_model(self):
         seen = {}
         def fake(exe, args, cwd, **kwargs):
             seen.update(args=args, cwd=cwd, **kwargs)
+            self.assertTrue((cwd / '.git').is_dir())
+            self.assertEqual(args[args.index('--dir')+1], str(cwd))
             return json.dumps({'type':'text','part':{'text':json.dumps(self.payload())}})
         summarize(self.brain, self.cfg, '1: Source', fake)
         override = json.loads(seen['env']['OPENCODE_CONFIG_CONTENT'])
-        self.assertEqual(override['agent']['brain_enricher']['permission'], {'*':'deny'})
+        permission = override['agent']['brain_enricher']['permission']
+        self.assertEqual(permission['*'], 'deny')
+        self.assertEqual(permission['read']['*'], 'deny')
+        self.assertEqual(permission['read']['source.txt'], 'allow')
         self.assertEqual(override['small_model'], 'opencode/test-free')
         self.assertNotIn('Source', ' '.join(seen['args']))
-        self.assertFalse(Path(seen['args'][seen['args'].index('--file')+1]).exists())
+        self.assertFalse((seen['cwd'] / 'source.txt').exists())
         self.assertNotEqual(seen['cwd'], self.project)
+
+    def test_worker_accepts_only_successful_reads_of_the_supplied_file(self):
+        path = self.home / 'source.txt'
+        event = {'type':'tool_use','part':{'tool':'read','state':{'status':'completed','input':{'filePath':str(path)}}}}
+        text = {'type':'text','part':{'text':json.dumps(self.payload())}}
+        output = json.dumps(event) + '\n' + json.dumps(text)
+        self.assertEqual(model_events(output, str(path)), self.payload())
+        event['part']['state']['input']['filePath'] = 'source.txt'
+        self.assertEqual(model_events(json.dumps(event) + '\n' + json.dumps(text), str(path)), self.payload())
+        event['part']['state']['input']['filePath'] = str(path)
+        with self.assertRaisesRegex(ValueError, 'unauthorized'):
+            model_events(output, str(self.home / 'other.txt'))
+        event['part']['state']['status'] = 'error'
+        with self.assertRaisesRegex(ValueError, 'did not complete'):
+            model_events(json.dumps(event), str(path))
 
     def test_lock_prevents_overlap(self):
         with lock(self.brain):
