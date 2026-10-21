@@ -297,3 +297,32 @@ Official interfaces:
 - https://opencode.ai/docs/cli/
 - https://opencode.ai/docs/agents/
 - https://opencode.ai/docs/config/
+
+
+### Diagnosing a failed enrichment request
+
+A failed job means metadata was not generated; raw-source search remains usable.
+Errors now classify recognized provider access/quota/CLI failures without saving
+raw provider responses or source text in diagnostic logs. After updating, run:
+
+```powershell
+& .\.venv\Scripts\brain.exe enrich --retry-failed
+& .\.venv\Scripts\brain.exe status
+```
+
+If it reports HTTP 403 / FreeTierError, this is a provider rejection rather than
+missing indexed notes or invalid summary JSON. Similar failures are reported on
+the official OpenCode tracker, including issue #52907. They do not prove the
+cause on your machine. Do not bypass access checks or switch to paid models
+silently. Verify your version and a harmless prompt in the official CLI:
+
+```powershell
+opencode --version
+opencode run --model opencode/deepseek-v4.1-flash-free --format json "Reply with OK only."
+```
+
+If that succeeds but enrichment fails, compare the classified worker error;
+the next check is worker configuration, rather than reinstalling Python or
+assuming your free account is exhausted. Restart OpenCode after code updates.
+Use brain_read explicitly to inspect generated_metadata; summaries are attached
+to source records and are not independent records with separate IDs.

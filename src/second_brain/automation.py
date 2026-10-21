@@ -108,6 +108,42 @@ def atomic_json(path, value):
     os.replace(temporary, path)
 
 
+def safe_failure(stdout, stderr='', exit_code=None):
+    """Classify known failures without logging provider bodies, prompts or secrets."""
+    events = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(event, dict) and event.get('type') == 'error':
+            events.append(event.get('error', {}))
+    for error in events:
+        if not isinstance(error, dict):
+            continue
+        data = error.get('data', {})
+        if not isinstance(data, dict):
+            data = {}
+        status = data.get('statusCode', error.get('status'))
+        message = str(data.get('message', error.get('message', '')))
+        if status == 403 and ('free tier' in message.lower() or 'FreeTierError' in message):
+            return 'OpenCode free-tier access rejected (HTTP 403 / FreeTierError). Check the same model in the official CLI and its provider login/access. No model fallback attempted.'
+        if status in (401, 403):
+            return f'OpenCode provider access denied (HTTP {status}). Check provider login/access. No model fallback attempted.'
+        if status == 429:
+            return 'OpenCode provider rate limit/quota reached (HTTP 429). Wait before retrying; no model fallback attempted.'
+        if error.get('name') in ('ProviderModelNotFoundError', 'ModelNotFoundError'):
+            return 'OpenCode could not find the configured model. Check its exact provider/model ID.'
+    # Inspect only for known signatures; never include arbitrary stderr in the report.
+    lowered = stderr.lower()
+    if 'unknown argument' in lowered or 'unknown option' in lowered:
+        return 'OpenCode CLI option unsupported. Check opencode --version and run --help against the documented V1 interface.'
+    if 'configinvaliderror' in lowered:
+        return 'OpenCode rejected its configuration. Check local/global settings and the worker configuration.'
+    suffix = f' (exit {exit_code})' if exit_code is not None else ''
+    return 'OpenCode worker/provider failed' + suffix + '; underlying error not safely classified. Test a synthetic prompt manually. No model fallback attempted.'
+
+
 def invoke(executable, args, cwd, timeout=90, env=None):
     exe = shutil.which(executable)
     if not exe:
@@ -128,10 +164,11 @@ def invoke(executable, args, cwd, timeout=90, env=None):
         process.communicate()
         raise ValueError('OpenCode timed out; no paid fallback was attempted') from exc
     # Do not persist provider output/errors: they may contain source text or secrets.
-    if process.returncode:
-        raise ValueError(f'OpenCode exited {process.returncode}; check login, model, version and quota manually')
     if len(stdout) > 16_000_000:
         raise ValueError('OpenCode output exceeds the supported 16 MB limit')
+    if process.returncode:
+        raise ValueError(safe_failure(stdout.decode('utf-8-sig', errors='replace'),
+                                      stderr.decode('utf-8-sig', errors='replace'), process.returncode))
     return stdout.decode('utf-8-sig').strip()
 
 
@@ -297,7 +334,7 @@ def model_events(output):
         if not isinstance(event, dict):
             raise ValueError('Unsupported model event JSON')
         if event.get('type') == 'error':
-            raise ValueError('Provider returned an error; no fallback was attempted')
+            raise ValueError(safe_failure(line))
         sid = event.get('sessionID', sid)
         if event.get('type') == 'tool_use':
             raise ValueError('Enrichment unexpectedly attempted a tool call')

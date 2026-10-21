@@ -7,7 +7,7 @@ from pathlib import Path
 
 from second_brain.core import Brain
 from second_brain.automation import (DEFAULTS, capture, config, enrich, lock,
-    model_events, render_session, run, source_chunks, summarize, validate_metadata)
+    model_events, render_session, run, safe_failure, source_chunks, summarize, validate_metadata)
 
 
 class AutomationTests(unittest.TestCase):
@@ -166,6 +166,25 @@ class AutomationTests(unittest.TestCase):
             model_events(json.dumps({'type':'tool_use'}))
         with self.assertRaises(ValueError):
             model_events('[]')
+
+    def test_provider_errors_are_classified_without_exposing_private_text(self):
+        error = {'type':'error','error':{'name':'APIError','data':{
+            'statusCode':403, 'message':"OpenCode's free tier can only be used from within OpenCode. SECRET",
+            'responseBody':'PRIVATE SOURCE TEXT'}}}
+        reason = safe_failure(json.dumps(error), 'private token: SECRET', 1)
+        self.assertIn('FreeTierError', reason)
+        self.assertNotIn('SECRET', reason)
+        self.assertNotIn('PRIVATE', reason)
+        with self.assertRaisesRegex(ValueError, 'FreeTierError'):
+            model_events(json.dumps(error))
+        error['error']['data']['statusCode'] = 429
+        self.assertIn('429', safe_failure(json.dumps(error)))
+
+    def test_unknown_cli_errors_do_not_dump_stderr(self):
+        reason = safe_failure('', 'API_KEY=SECRET / private-source', 1)
+        self.assertIn('exit 1', reason)
+        self.assertNotIn('SECRET', reason)
+        self.assertIn('option unsupported', safe_failure('', 'Unknown argument: pure', 1))
 
     def test_worker_denies_tools_and_uses_only_explicit_model(self):
         seen = {}
